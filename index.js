@@ -86,9 +86,30 @@ async function run() {
             } else {
                 currentCredits = 0
             }
-            const updateDoc = await {$set:{credits: parseFloat(credits?.credits) + currentCredits}}
+            let addedCredits;
+            if(credits?.credits){
+                addedCredits = parseFloat(credits?.credits)
+            }else{
+                addedCredits = 0
+            }
+            const updateDoc = await {$set:{credits: addedCredits + currentCredits}}
             const result = await usersCollection.updateOne(filter, updateDoc)
             res.send({currentCredits})
+        })
+
+        //UPDATE CREDIT PER SEARCH - API
+        app.put('/update-search-credit', async(req, res) => {
+            const searchData = req.body;
+            const filter = {email: searchData.email}
+            const user = await usersCollection.findOne({email: searchData.email})
+            if(user?.credits){
+                const updateDoc = await {$set:{credits: parseFloat(user?.credits) - 1}}
+                const result = await usersCollection.updateOne(filter, updateDoc)
+                res.send(result)
+            } else{
+                const error = {acknowledged: false}
+                res.send(error)
+            }
         })
 
     }
